@@ -56,7 +56,7 @@ Render supplies `PORT` automatically. After deployment, check `https://your-api.
 
 1. In Vercel, choose **Add New → Project** and import `MSKhanDA/B14-A8-Cat_Harry`.
 2. Keep the project root at the repository root and use the detected **Next.js** framework settings. The build command is `npm run build`.
-3. Add `NEXT_PUBLIC_API_URL` with your API origin, such as `https://your-api.onrender.com`. This value is public, so it must not contain secrets.
+3. Add `NEXT_PUBLIC_API_URL` with your API origin, such as `https://your-api.onrender.com` (no path or trailing slash). This value is public, so it must not contain secrets.
 4. Deploy. Set the API service's `CLIENT_URL` to the exact Vercel origin shown after deployment, then redeploy the API.
 
 ### 4. Optional sign-in and image uploads

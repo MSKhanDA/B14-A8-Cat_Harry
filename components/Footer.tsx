@@ -33,12 +33,8 @@ export function Footer() {
         </div>
         <div className="footer-newsletter">
           <h3>Good things, occasionally.</h3>
-          <p>Studio finds, creative stories, and a little inspiration for your next project.</p>
-          <form action="mailto:hello@studiospace.com" method="get" className="newsletter-form">
-            <label className="sr-only" htmlFor="newsletter-email">Your email address</label>
-            <input id="newsletter-email" name="subject" type="email" placeholder="Your email address" required />
-            <button type="submit" aria-label="Subscribe"><ArrowRight size={17} /></button>
-          </form>
+          <p>Studio finds, creative stories, and a little inspiration for your next project. Have a question? Send us a note.</p>
+          <a className="newsletter-contact" href="mailto:hello@studiospace.com?subject=StudioSpace%20updates">Get in touch <ArrowRight size={17} /></a>
         </div>
       </div>
       <div className="footer-bottom">

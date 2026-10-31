@@ -480,10 +480,8 @@ textarea.text-input { min-height: auto; padding: 12px 13px; resize: vertical; }
 .footer-link-column a { color: #aab2a7; font-size: 11px; }
 .footer-link-column a:hover { color: var(--lime); }
 .footer-newsletter > p { margin: -3px 0 0; color: #aab2a7; font-size: 11px; line-height: 1.7; }
-.newsletter-form { width: 100%; display: flex; margin-top: 2px; border-bottom: 1px solid #596356; }
-.newsletter-form input { width: 100%; min-width: 0; padding: 11px 4px; border: 0; outline: 0; background: transparent; color: #f0f1e8; font-size: 11px; }
-.newsletter-form input::placeholder { color: #8f9a8d; }
-.newsletter-form button { width: 36px; display: grid; flex: 0 0 auto; place-items: center; border: 0; background: transparent; color: var(--lime); cursor: pointer; }
+.newsletter-contact { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; color: var(--lime); font-size: 11px; font-weight: 600; }
+.newsletter-contact:hover { gap: 12px; }
 .footer-bottom { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 15px; border-top: 1px solid #394239; color: #929b91; font-size: 10px; }
 .footer-bottom > div { display: flex; gap: 20px; }
 .footer-bottom a:hover { color: #fff; }

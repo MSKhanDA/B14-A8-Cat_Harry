@@ -300,7 +300,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: `${process.env.API_URL ?? "http://localhost:4000"}/api/auth/google/callback`,
+        callbackURL: `${process.env.API_URL ?? (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : "http://localhost:4000")}/api/auth/google/callback`,
       },
       (_accessToken, _refreshToken, profile, done) => {
         const email = profile.emails?.[0]?.value?.toLowerCase();

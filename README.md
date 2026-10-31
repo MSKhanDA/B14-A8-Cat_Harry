@@ -47,20 +47,18 @@ In Atlas, select **Connect → Drivers** and copy the Node.js connection string.
 
 ### 2. Deploy the API
 
-Create a Render Web Service from this GitHub repository:
+Create a Render Blueprint from this GitHub repository and select the `render.yaml` file. It provisions the Express API as its own Render Web Service; it does not replace the Vercel website. Set `MONGODB_URI` to the rotated Atlas connection string when prompted. Render generates `JWT_SECRET` automatically.
 
-- **Root directory:** leave blank.
-- **Build command:** `npm install`
-- **Start command:** `npm run start:server`
+If creating the service manually instead, use the repository root with build command `npm install`, start command `npm run start:server`, and health check path `/api/health`.
 
-Set these environment variables on the API service:
+Ensure these environment variables are set on the API service:
 
 | Variable | Value |
 |---|---|
 | `MONGODB_URI` | Your MongoDB Atlas connection string |
 | `JWT_SECRET` | A long, random secret; do not commit it |
 | `CLIENT_URL` | Your Vercel site origin, for example `https://your-site.vercel.app` |
-| `API_URL` | Your deployed API origin, for example `https://your-api.onrender.com` |
+| `API_URL` | Optional. The Google OAuth callback uses Render's service hostname automatically if this is omitted. |
 | `GOOGLE_CLIENT_ID` | Optional; your Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Optional; your Google OAuth client secret |
 | `IMGBB_API_KEY` | Optional; enables studio image uploads |
@@ -71,7 +69,7 @@ Render supplies `PORT` automatically. After deployment, check `https://your-api.
 
 1. In Vercel, choose **Add New → Project** and import `MSKhanDA/B14-A8-Cat_Harry`.
 2. Keep the project root at the repository root and use the detected **Next.js** framework settings. The build command is `npm run build`.
-3. Add `NEXT_PUBLIC_API_URL` with your API origin, such as `https://your-api.onrender.com` (no path or trailing slash). This value is public, so it must not contain secrets.
+3. Add `NEXT_PUBLIC_API_URL` with the new API service's origin, such as `https://studiospace-api.onrender.com` (no path or trailing slash). This value is public, so it must not contain secrets.
 4. Deploy. Set the API service's `CLIENT_URL` to the exact Vercel origin shown after deployment, then redeploy the API.
 
 ### 4. Optional sign-in and image uploads

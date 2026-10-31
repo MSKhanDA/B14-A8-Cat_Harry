@@ -33,10 +33,10 @@ function MyBookingsContent() {
 
   useEffect(() => { void load(); }, [load]);
 
-  async function updateStatus(booking: Booking, status: "Confirmed" | "Cancelled") {
+  async function updateStatus(booking: Booking, status: "Confirmed" | "Cancelled" | "Completed") {
     try {
       await api(`/bookings/${booking._id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
-      toast.success(status === "Confirmed" ? "Booking confirmed. Let the good work begin." : "Booking request declined.");
+      toast.success(status === "Confirmed" ? "Booking confirmed. Let the good work begin." : status === "Completed" ? "Session marked complete. Your guest can now leave a review." : "Booking request declined.");
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not update this booking.");
@@ -56,9 +56,10 @@ function MyBookingsContent() {
   function bookingCard(booking: Booking, host = false) {
     return <article className="booking-row" key={`${host ? "host" : "guest"}-${booking._id}`}>
       <div className="booking-row-image" style={{ backgroundImage: `url("${booking.studioImage}")` }} />
-      <div className="booking-row-info"><span className={`status-pill status-${booking.status.toLowerCase()}`}>{booking.status}</span><h3>{booking.studioTitle}</h3><span><CalendarDays size={14} />{formatBookingDate(booking.startsAt)}</span><span><Clock3 size={14} />{booking.hours} {booking.hours === 1 ? "hour" : "hours"} · Ends {formatBookingDate(booking.endsAt)}</span>{host && <span className="booking-guest">Request from {booking.guestName} · {booking.guestEmail}</span>}</div>
+      <div className="booking-row-info"><span className={`status-pill status-${booking.status.toLowerCase()}`}>{booking.status}</span><h3><Link href={`/studios/${booking.studioId}`}>{booking.studioTitle}</Link></h3><span><CalendarDays size={14} />{formatBookingDate(booking.startsAt)}</span><span><Clock3 size={14} />{booking.hours} {booking.hours === 1 ? "hour" : "hours"} · Ends {formatBookingDate(booking.endsAt)}</span>{host && <span className="booking-guest">Request from {booking.guestName} · {booking.guestEmail}</span>}</div>
       <div className="booking-row-total"><span>Total</span><strong>${booking.total.toFixed(2)}</strong></div>
       {host && booking.status === "Pending" ? <div className="booking-row-actions"><button className="icon-action confirm-action" title="Confirm request" onClick={() => void updateStatus(booking, "Confirmed")}><Check size={17} /></button><button className="icon-action danger-action" title="Decline request" onClick={() => void updateStatus(booking, "Cancelled")}><X size={17} /></button></div> :
+        host && booking.status === "Confirmed" && new Date(booking.endsAt).getTime() <= Date.now() ? <button className="icon-action confirm-action" title="Mark session complete" aria-label="Mark session complete" onClick={() => void updateStatus(booking, "Completed")}><Check size={17} /></button> :
         !host && booking.status === "Pending" ? <button className="button button-outline button-small" onClick={() => void cancelBooking(booking)}>Cancel request</button> : null}
     </article>;
   }

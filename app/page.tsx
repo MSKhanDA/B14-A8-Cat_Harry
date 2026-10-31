@@ -91,8 +91,8 @@ export default function HomePage() {
           <div><p className="eyebrow eyebrow-dark">GOOD SPACES, GOOD PEOPLE</p><h2>Places with a point <em>of view.</em></h2></div>
           <Link className="text-link" href="/studios">Explore all spaces <ArrowUpRight size={16} /></Link>
         </div>
-        {loading ? <div className="studio-grid">{[1, 2, 3].map((item) => <div className="studio-skeleton" key={item}><div /><span /><i /></div>)}</div> :
-          studios.length > 0 ? <div className="studio-grid">{studios.slice(0, 3).map((studio, index) => <StudioCard key={studio._id} studio={studio} index={index} />)}</div> :
+        {loading ? <div className="studio-grid">{[1, 2, 3, 4, 5, 6].map((item) => <div className="studio-skeleton" key={item}><div /><span /><i /></div>)}</div> :
+          studios.length > 0 ? <div className="studio-grid">{studios.slice(0, 6).map((studio, index) => <StudioCard key={studio._id} studio={studio} index={index} />)}</div> :
             <div className="empty-featured"><span className="empty-icon"><Sparkles size={22} /></span><div><h3>Your next favorite studio is out there.</h3><p>We’re getting the spaces ready. Be the first to share yours.</p></div><Link className="button button-outline" href="/add-studio">List a space <ArrowRight size={16} /></Link></div>}
       </section>
 

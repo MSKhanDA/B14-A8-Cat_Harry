@@ -13,8 +13,21 @@ The Next.js website is deployed on Vercel. The Express API must also be running 
 - Discover and filter creative studios, film stages, podcast rooms, music suites, and workshops.
 - Create and manage studio listings, upload images, and handle guest booking requests.
 - Secure accounts with password authentication and HTTP-only session cookies; optional Google sign-in.
-- Prevent overlapping confirmed bookings, and manage bookings as a guest or host.
+- Browse studio photo galleries, read guest reviews, and prevent overlapping confirmed bookings.
+- Manage listings and bookings as a host or guest, with responsive light and dark themes.
 - Responsive Next.js and TypeScript client, Express API, MongoDB, and Sonner notifications.
+
+## Local setup
+
+1. Install Node.js 20.9 or newer and make a MongoDB database available locally or through Atlas.
+2. Run `npm install` from the project root.
+3. Copy `.env.example` to `.env`. Set `MONGODB_URI` and a long random `JWT_SECRET`; keep the file private. Google OAuth and ImgBB are optional.
+4. Run `npm run dev`. The Next.js client starts at `http://localhost:3000` and the Express API at `http://localhost:4000`.
+5. Use `npm run typecheck` and `npm run build` to validate the client before deployment.
+
+### Examiner access
+
+There is no shared or pre-seeded demo account. Create an account on `/register` with an email you can use and a password containing at least six characters, one uppercase letter, and one lowercase letter. To test hosting and booking, register a second account; after the booking ends, mark it complete as its host to enable the guest review form.
 
 ## Deploy the project
 

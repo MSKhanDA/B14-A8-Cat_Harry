@@ -43,12 +43,13 @@ const studioSchema = new Schema(
     maxCapacity: { type: Number, required: true, min: 1 },
     location: { type: String, required: true, trim: true },
     imageUrl: { type: String, required: true },
+    galleryImages: { type: [String], default: [] },
     amenities: { type: [String], default: [] },
     overview: { type: String, required: true },
     ownerEmail: { type: String, required: true, lowercase: true },
     ownerName: { type: String, required: true },
     ownerPhoto: { type: String, default: "" },
-    rating: { type: Number, default: 4.8 },
+    rating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
     featured: { type: Boolean, default: false },
   },
@@ -76,9 +77,23 @@ const bookingSchema = new Schema(
   { timestamps: true },
 );
 
+const reviewSchema = new Schema(
+  {
+    studioId: { type: Schema.Types.ObjectId, ref: "Studio", required: true, index: true },
+    bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true, unique: true },
+    guestEmail: { type: String, required: true, lowercase: true },
+    guestName: { type: String, required: true },
+    guestPhoto: { type: String, default: "" },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    comment: { type: String, required: true, trim: true, maxlength: 1200 },
+  },
+  { timestamps: true },
+);
+
 const User = mongoose.models.User ?? mongoose.model("User", userSchema);
 const Studio = mongoose.models.Studio ?? mongoose.model("Studio", studioSchema);
 const Booking = mongoose.models.Booking ?? mongoose.model("Booking", bookingSchema);
+const Review = mongoose.models.Review ?? mongoose.model("Review", reviewSchema);
 
 type AuthUser = { id: string; email: string; name: string; photoUrl: string };
 
@@ -149,6 +164,7 @@ const studioInputSchema = z.object({
   maxCapacity: z.coerce.number().int().min(1).max(1000),
   location: z.string().trim().min(3).max(160),
   imageUrl: z.string().url(),
+  galleryImages: z.array(z.string().url()).max(8).default([]),
   amenities: z.array(z.string().trim().min(1).max(40)).max(30),
   overview: z.string().trim().min(20).max(5000),
 });
@@ -164,7 +180,51 @@ const imageUpload = multer({
   },
 });
 
+function parseStudioImage(req: Request, res: Response, next: NextFunction) {
+  imageUpload.single("image")(req, res, (error: unknown) => {
+    if (error instanceof multer.MulterError) {
+      res.status(error.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
+        message: error.code === "LIMIT_FILE_SIZE" ? "Choose an image smaller than 8 MB." : error.message,
+      });
+      return;
+    }
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    next();
+  });
+}
+
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
+
+app.post("/api/images", requireAuth, parseStudioImage, async (req: AuthRequest, res, next) => {
+  try {
+    const apiKey = process.env.IMGBB_API_KEY;
+    if (!apiKey) {
+      res.status(503).json({ message: "Image uploads aren't configured yet. Add IMGBB_API_KEY to the server environment." });
+      return;
+    }
+    if (!req.file) {
+      res.status(400).json({ message: "Choose an image to upload." });
+      return;
+    }
+    const form = new FormData();
+    form.set("image", new Blob([new Uint8Array(req.file.buffer)], { type: req.file.mimetype }), req.file.originalname);
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`, {
+      method: "POST",
+      body: form,
+    });
+    const result = await response.json() as { success?: boolean; data?: { url?: string }; error?: { message?: string } };
+    if (!response.ok || !result.success || !result.data?.url) {
+      res.status(502).json({ message: result.error?.message ?? "The image host could not upload this file." });
+      return;
+    }
+    res.status(201).json({ imageUrl: result.data.url });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.post("/api/auth/register", async (req, res, next) => {
   try {
@@ -325,6 +385,83 @@ app.get("/api/studios/:id", async (req, res, next) => {
   }
 });
 
+app.get("/api/studios/:id/reviews", async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      res.status(404).json({ message: "This studio could not be found." });
+      return;
+    }
+    const reviews = await Review.find({ studioId: req.params.id }).sort({ createdAt: -1 }).limit(50).lean();
+    res.json({ reviews });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/studios/:id/reviews", requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      res.status(404).json({ message: "This studio could not be found." });
+      return;
+    }
+    const parsed = z.object({
+      bookingId: z.string().refine(mongoose.isValidObjectId),
+      rating: z.coerce.number().int().min(1).max(5),
+      comment: z.string().trim().min(10).max(1200),
+    }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ message: "Choose a rating and write a review of at least 10 characters." });
+      return;
+    }
+    const [studio, booking] = await Promise.all([
+      Studio.findById(req.params.id),
+      Booking.findOne({
+        _id: parsed.data.bookingId,
+        studioId: req.params.id,
+        guestEmail: req.user!.email,
+        status: "Completed",
+        endsAt: { $lte: new Date() },
+      }),
+    ]);
+    if (!studio) {
+      res.status(404).json({ message: "This studio could not be found." });
+      return;
+    }
+    if (!booking) {
+      res.status(403).json({ message: "A completed booking is required to review this studio." });
+      return;
+    }
+    try {
+      const review = await Review.create({
+        studioId: studio._id,
+        bookingId: booking._id,
+        guestEmail: req.user!.email,
+        guestName: req.user!.name,
+        guestPhoto: req.user!.photoUrl,
+        rating: parsed.data.rating,
+        comment: parsed.data.comment,
+      });
+      const [rating] = await Review.aggregate<{ average: number; count: number }>([
+        { $match: { studioId: studio._id } },
+        { $group: { _id: null, average: { $avg: "$rating" }, count: { $sum: 1 } } },
+      ]);
+      await Studio.updateOne(
+        { _id: studio._id },
+        { rating: rating.average, reviewCount: rating.count },
+      );
+      res.status(201).json({ review });
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === 11000) {
+        res.status(409).json({ message: "You’ve already reviewed this completed booking." });
+        return;
+      }
+      throw error;
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post("/api/studios", requireAuth, async (req: AuthRequest, res, next) => {
   try {
     const parsed = studioInputSchema.safeParse(req.body);
@@ -339,49 +476,6 @@ app.post("/api/studios", requireAuth, async (req: AuthRequest, res, next) => {
       ownerPhoto: req.user!.photoUrl,
     });
 
-    function parseStudioImage(req: Request, res: Response, next: NextFunction) {
-      imageUpload.single("image")(req, res, (error: unknown) => {
-        if (error instanceof multer.MulterError) {
-          res.status(error.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
-            message: error.code === "LIMIT_FILE_SIZE" ? "Choose an image smaller than 8 MB." : error.message,
-          });
-          return;
-        }
-        if (error instanceof Error) {
-          res.status(400).json({ message: error.message });
-          return;
-        }
-        next();
-      });
-    }
-
-    app.post("/api/images", requireAuth, parseStudioImage, async (req: AuthRequest, res, next) => {
-      try {
-        const apiKey = process.env.IMGBB_API_KEY;
-        if (!apiKey) {
-          res.status(503).json({ message: "Image uploads aren't configured yet. Add IMGBB_API_KEY to the server environment." });
-          return;
-        }
-        if (!req.file) {
-          res.status(400).json({ message: "Choose an image to upload." });
-          return;
-        }
-        const form = new FormData();
-        form.set("image", new Blob([new Uint8Array(req.file.buffer)], { type: req.file.mimetype }), req.file.originalname);
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`, {
-          method: "POST",
-          body: form,
-        });
-        const result = await response.json() as { success?: boolean; data?: { url?: string }; error?: { message?: string } };
-        if (!response.ok || !result.success || !result.data?.url) {
-          res.status(502).json({ message: result.error?.message ?? "The image host could not upload this file." });
-          return;
-        }
-        res.status(201).json({ imageUrl: result.data.url });
-      } catch (error) {
-        next(error);
-      }
-    });
     res.status(201).json({ studio });
   } catch (error) {
     next(error);
@@ -538,6 +632,10 @@ app.patch("/api/bookings/:id/status", requireAuth, async (req: AuthRequest, res,
     const booking = await Booking.findOne({ _id: req.params.id, ownerEmail: req.user!.email });
     if (!booking) {
       res.status(404).json({ message: "Booking not found or you are not the studio host." });
+      return;
+    }
+    if (parsed.data.status === "Completed" && booking.endsAt.getTime() > Date.now()) {
+      res.status(400).json({ message: "A booking can only be completed after its scheduled end time." });
       return;
     }
     if (parsed.data.status === "Confirmed") {

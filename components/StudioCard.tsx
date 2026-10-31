@@ -8,18 +8,18 @@ export function StudioCard({ studio, index = 0 }: { studio: Studio; index?: numb
       <Link href={`/studios/${studio._id}`} className="studio-card-image-link" aria-label={`View ${studio.title}`}>
         <div className="studio-card-image" style={{ backgroundImage: `url("${studio.imageUrl}")` }}>
           <span className="category-pill">{studio.category}</span>
-          <span className="rating-pill"><Star size={13} fill="currentColor" /> {studio.rating?.toFixed(1) ?? "4.8"}</span>
+          <span className="rating-pill">{studio.reviewCount > 0 ? <><Star size={13} fill="currentColor" /> {studio.rating.toFixed(1)}</> : "New space"}</span>
         </div>
       </Link>
       <div className="studio-card-content">
         <div className="studio-card-location"><MapPin size={14} /> <span>{studio.location}</span></div>
         <Link className="studio-card-title" href={`/studios/${studio._id}`}>{studio.title}</Link>
         <div className="studio-card-bottom">
-          <span className="studio-card-reviews">{studio.reviewCount ? `${studio.reviewCount} reviews` : "A creator favorite"}</span>
+          <span className="studio-card-reviews">{studio.reviewCount ? `${studio.reviewCount} ${studio.reviewCount === 1 ? "review" : "reviews"}` : "No reviews yet"}</span>
           <span className="studio-price"><strong>${studio.hourlyRate}</strong> / hr</span>
         </div>
       </div>
-      <Link className="studio-card-arrow" href={`/studios/${studio._id}`} aria-label={`View ${studio.title}`}><ArrowUpRight size={17} /></Link>
+      <Link className="studio-card-arrow" href={`/studios/${studio._id}`} aria-label={`View details for ${studio.title}`}><span className="studio-card-arrow-label">View details</span><ArrowUpRight size={15} /></Link>
     </article>
   );
 }

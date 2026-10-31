@@ -27,6 +27,7 @@ export type Studio = {
   maxCapacity: number;
   location: string;
   imageUrl: string;
+  galleryImages: string[];
   amenities: string[];
   overview: string;
   ownerEmail: string;
@@ -49,4 +50,14 @@ export type Booking = {
   hours: number;
   total: number;
   status: "Pending" | "Confirmed" | "Completed" | "Cancelled";
+};
+export type Review = {
+  _id: string;
+  studioId: string;
+  bookingId: string;
+  guestName: string;
+  guestPhoto: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
 };

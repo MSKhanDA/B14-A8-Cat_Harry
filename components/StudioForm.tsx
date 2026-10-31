@@ -16,6 +16,7 @@ export type StudioFormValues = {
   maxCapacity: number;
   location: string;
   imageUrl: string;
+  galleryImages: string[];
   amenities: string[];
   overview: string;
 };
@@ -33,6 +34,7 @@ export function StudioForm({ initial, onSubmit, submitLabel }: {
     maxCapacity: initial?.maxCapacity ?? 8,
     location: initial?.location ?? "",
     imageUrl: initial?.imageUrl ?? "",
+    galleryImages: initial?.galleryImages ?? [],
     amenities: initial?.amenities ?? [],
     overview: initial?.overview ?? "",
   });
@@ -96,6 +98,7 @@ export function StudioForm({ initial, onSubmit, submitLabel }: {
         <span className="upload-field-button">{uploading ? "Uploading image..." : "Choose a photo to upload"}</span><span className="field-hint">Up to 8 MB · JPG, PNG, or WebP</span>
       </label>
       {values.imageUrl && <div className="image-preview" style={{ backgroundImage: `url("${values.imageUrl}")` }} aria-label="Cover image preview" />}
+      <label className="field-label">Gallery image URLs <span className="optional-label">optional · up to 8</span><textarea className="text-input text-area" value={values.galleryImages.join("\n")} onChange={(event) => setField("galleryImages", event.target.value.split("\n").map((url) => url.trim()).filter(Boolean))} placeholder="Add one image URL per line" rows={3} /><span className="field-hint">Add a few extra views to help creators get to know your space.</span></label>
       <div className="form-section-heading"><span>02</span><div><h2>Space details</h2><p>Set expectations before the first hello.</p></div></div>
       <div className="field-grid three-columns">
         <label className="field-label">Hourly rate ($)<input className="text-input" type="number" min="1" max="10000" value={values.hourlyRate} onChange={(event) => setField("hourlyRate", Number(event.target.value))} required /></label>

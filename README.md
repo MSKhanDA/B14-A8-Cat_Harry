@@ -6,8 +6,7 @@ StudioSpace is a creative-space marketplace connecting photographers, filmmakers
 
 **Live site:** [https://b14-five.vercel.app](https://b14-five.vercel.app)
 
-The Next.js website is deployed on Vercel. The Express API must also be running for registration, sign-in, studio data, and bookings to work. Follow the API deployment steps below and set the Vercel `NEXT_PUBLIC_API_URL` to that API's origin.
-
+The Next.js website is deployed on Vercel. The Express API must also be running for registration, sign-in, studio data, and bookings to work.
 ## Project highlights
 
 - Discover and filter creative studios, film stages, podcast rooms, music suites, and workshops.

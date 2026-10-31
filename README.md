@@ -16,9 +16,3 @@ The Next.js website is deployed on Vercel. The Express API must also be running 
 - Browse studio photo galleries, read guest reviews, and prevent overlapping confirmed bookings.
 - Manage listings and bookings as a host or guest, with responsive light and dark themes.
 - Responsive Next.js and TypeScript client, Express API, MongoDB, and Sonner notifications.
-
-
-
-### Cookie note
-
-The client and API need to send credentials across origins. The API enables credentialed CORS and uses secure cookies in production. Browsers may restrict cookies when the Vercel and API hosts are on different sites. For reliable production sign-in, use custom domains on the same site, such as `studiospace.example.com` and `api.studiospace.example.com`, and update the Vercel API URL, API `CLIENT_URL`, and Google OAuth URLs to match.
